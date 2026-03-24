@@ -921,7 +921,21 @@
     <p>&copy; 2026 PagePulse. Regulatory change monitoring for compliance teams.</p>
   </footer>
 
+  <!-- Plausible Analytics (free, privacy-friendly) -->
+  <script defer data-domain="danieldiazie.github.io" src="https://plausible.io/js/script.tagged-events.js"></script>
+
   <script>
+    // Parse UTM parameters from URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const utmSource = urlParams.get('utm_source');
+    const utmMedium = urlParams.get('utm_medium');
+    const utmCampaign = urlParams.get('utm_campaign');
+
+    // Store UTMs in sessionStorage so they persist across page navigation
+    if (utmSource) sessionStorage.setItem('utm_source', utmSource);
+    if (utmMedium) sessionStorage.setItem('utm_medium', utmMedium);
+    if (utmCampaign) sessionStorage.setItem('utm_campaign', utmCampaign);
+
     // Handle form submission
     const form = document.getElementById('waitlistForm');
     const btn = document.getElementById('submitBtn');
@@ -938,6 +952,9 @@
         company: form.querySelector('[name="company"]').value,
         role: form.querySelector('[name="role"]').value,
         team_size: form.querySelector('[name="team_size"]').value || null,
+        utm_source: sessionStorage.getItem('utm_source') || utmSource || null,
+        utm_medium: sessionStorage.getItem('utm_medium') || utmMedium || null,
+        utm_campaign: sessionStorage.getItem('utm_campaign') || utmCampaign || null,
       };
 
       try {
@@ -950,6 +967,10 @@
         if (resp.ok) {
           form.style.display = 'none';
           success.style.display = 'block';
+          // Track conversion event for Plausible
+          if (window.plausible) {
+            window.plausible('Waitlist Signup', { props: { source: data.utm_source || 'direct', medium: data.utm_medium || 'none' } });
+          }
         } else {
           const err = await resp.json();
           throw new Error(err.error || 'Form submission failed');
