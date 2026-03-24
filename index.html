@@ -850,7 +850,7 @@
         <h2>Be the first to try PagePulse</h2>
         <p class="section-sub" style="margin: 0 auto;">Join the waitlist for early access and launch pricing. We're onboarding compliance teams now.</p>
 
-        <form class="waitlist-form" id="waitlistForm" action="https://formspree.io/f/xwpkkjqp" method="POST">
+        <form class="waitlist-form" id="waitlistForm">
           <input type="email" name="email" class="form-input" placeholder="Work email" required>
           <div class="form-row">
             <input type="text" name="company" class="form-input" placeholder="Company name" required>
@@ -872,7 +872,6 @@
             <option value="21-50">21-50 people</option>
             <option value="50+">50+ people</option>
           </select>
-          <input type="hidden" name="_subject" value="PagePulse Waitlist Signup">
           <button type="submit" class="form-submit" id="submitBtn">Join the Waitlist</button>
           <p class="form-note">No spam. We'll only email you about PagePulse launch updates.</p>
         </form>
@@ -927,29 +926,38 @@
     const form = document.getElementById('waitlistForm');
     const btn = document.getElementById('submitBtn');
     const success = document.getElementById('formSuccess');
+    const API_URL = 'https://mc.diazovate.com/api/pagepulse/waitlist';
 
     form.addEventListener('submit', async function(e) {
       e.preventDefault();
       btn.disabled = true;
       btn.textContent = 'Submitting...';
 
+      const data = {
+        email: form.querySelector('[name="email"]').value,
+        company: form.querySelector('[name="company"]').value,
+        role: form.querySelector('[name="role"]').value,
+        team_size: form.querySelector('[name="team_size"]').value || null,
+      };
+
       try {
-        const resp = await fetch(form.action, {
+        const resp = await fetch(API_URL, {
           method: 'POST',
-          body: new FormData(form),
-          headers: { 'Accept': 'application/json' }
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data),
         });
 
         if (resp.ok) {
           form.style.display = 'none';
           success.style.display = 'block';
         } else {
-          throw new Error('Form submission failed');
+          const err = await resp.json();
+          throw new Error(err.error || 'Form submission failed');
         }
       } catch (err) {
         btn.disabled = false;
         btn.textContent = 'Join the Waitlist';
-        alert('Something went wrong. Please try again or email us directly.');
+        alert('Something went wrong. Please try again.');
       }
     });
 
